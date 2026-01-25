@@ -34,9 +34,7 @@ wss.on("connection",function connection (ws){
         PubSubManager.getInstance().userPublish(msg.stock,msg.payload)
         break;
       }
-      case "Broadcast":{
-        PubSubManager.getInstance().userBroadcast(msg.stock,msg.payload)
-      }
+      
        default: {
                  console.warn("Unknown message type:", msg.type);
        }

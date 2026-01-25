@@ -9,9 +9,13 @@ export class PubSubManager {
   private  constructor(){
     this.SubClient=createClient();
     this.PubClient=createClient();
-    this.PubClient.connect();
-    this.SubClient.connect();
+   
     this.Subscriptions=new Map();
+    this.init();
+  }
+  private async init (){
+   await this.PubClient.connect();
+   await this.SubClient.connect();
   }
   static getInstance(){
     if(!PubSubManager.instance){
@@ -48,29 +52,19 @@ export class PubSubManager {
   userPublish(stock:string,payload:string){
     return this.PubClient.publish(stock,payload)
   }
-  userBroadcast(stock:string,payload:string){
-    const users=this.Subscriptions.get(stock)
-    if(!users){
-      console.log("no user found")
-      return;
-        }
-    users?.forEach((id)=>{
+  
+  handleMessage(stock:string,message:string){
+    console.log(`Message recieved on channel : ${stock}:${message}`)
+    this.Subscriptions.get(stock)?.forEach((id)=>{
       const ws=connectionMap.get(id)
       if(ws && ws?.readyState===WebSocket.OPEN){
-      console.log(`${payload}:${stock}`)
+      console.log(`${message}:${stock}`)
         ws.send(JSON.stringify({
           type: "STOCK_UPDATE",
           stock,
-          data: payload
+          data: message
         }))
       }
-    })
-
-  }
-  handleMessage(stock:string,message:string){
-    console.log(`Message recieved on channel : ${stock}:${message}`)
-    this.Subscriptions.get(stock)?.forEach((sub)=>{
-      console.log(`seding messabe to user :${sub}`)
 
     })
   }
