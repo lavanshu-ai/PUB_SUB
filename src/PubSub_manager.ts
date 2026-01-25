@@ -2,12 +2,15 @@ import {createClient,RedisClientType} from "redis"
 import { connectionMap } from ".";
 export class PubSubManager {
   private static instance :PubSubManager;
-  private redisClient:RedisClientType;
+  private SubClient:RedisClientType;
+  private PubClient:RedisClientType;
   private Subscriptions:Map<string,string[]>;
 
-  private constructor(){
-    this.redisClient=createClient();
-    this.redisClient.connect();
+  private  constructor(){
+    this.SubClient=createClient();
+    this.PubClient=createClient();
+    this.PubClient.connect();
+    this.SubClient.connect();
     this.Subscriptions=new Map();
   }
   static getInstance(){
@@ -26,7 +29,7 @@ export class PubSubManager {
    }
 
     if(this.Subscriptions.get(stock)?.length===1){
-      this.redisClient.subscribe(stock,(message)=>{
+      this.SubClient.subscribe(stock,(message)=>{
          this.handleMessage(stock,message);
       });
      console.log(`Subscribed to redis channel :${stock}`)
@@ -38,11 +41,14 @@ export class PubSubManager {
     }
     this.Subscriptions.set(stock,this.Subscriptions.get(stock)?.filter((user:string)=>user!=userId) || [])
     if(this.Subscriptions.get(stock)?.length===0){
-      this.redisClient.unsubscribe(stock);
+      this.SubClient.unsubscribe(stock);
      console.log(`Unsubscribed to redis channel :${stock}`)
     }
   }
-  publish(stock:string,payload:string){
+  userPublish(stock:string,payload:string){
+    return this.PubClient.publish(stock,payload)
+  }
+  userBroadcast(stock:string,payload:string){
     const users=this.Subscriptions.get(stock)
     if(!users){
       console.log("no user found")
@@ -69,7 +75,7 @@ export class PubSubManager {
     })
   }
   public async disconnect() {
-        await this.redisClient.quit();
+        await this.SubClient.quit();
     }
 }
 //***note */
