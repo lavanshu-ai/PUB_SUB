@@ -64,11 +64,9 @@ Authenticates a user and stores their connection.
 ✅ On success, the user is added to `connectionMap`.
 
 
-```
 
 Without AUTH, **no subscribe, unsubscribe, or publish is allowed**.
 
----
 
 ### 2️⃣ SUBSCRIBE
 
